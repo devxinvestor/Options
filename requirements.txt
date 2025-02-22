@@ -1,4 +1,5 @@
 yfinance
+schwabdev
 pandas
 numpy
 scipy
@@ -7,4 +8,4 @@ arch
 scikit-learn
 matplotlib
 seaborn
-
+dotenv

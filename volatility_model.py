@@ -3,6 +3,15 @@ import numpy as np
 from arch import arch_model
 
 class VolatilityModel:
+    def __init__(self):
+        pass
+    
+    def calculate_log_returns(self, prices: pd.Series) -> pd.Series:
+        """
+        Calculate log returns from a series of prices.
+        """
+        return np.log(prices / prices.shift(1))
+    
     def calculate_garch_volatility(self, price_data: pd.Series, p: int = 1, q: int = 1) -> pd.Series:
         """
         Fit a GARCH(p, q) model to estimate volatility.

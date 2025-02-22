@@ -12,18 +12,6 @@ class PricingModel:
         self.model = None
         self.volatility_model = VolatilityModel()  # Initialize VolatilityModel
 
-    def calculate_log_returns(self, prices: pd.Series) -> pd.Series:
-        """
-        Calculate log returns from a series of prices.
-        """
-        return np.log(prices / prices.shift(1))
-
-    def calculate_historical_volatility(self, log_returns: pd.Series, window: int = 21) -> pd.Series:
-        """
-        Calculate rolling historical volatility from log returns.
-        """
-        return log_returns.rolling(window=window).std() * np.sqrt(252)
-
     def black_scholes_price(self, S: float, K: float, T: float, r: float, sigma: float, option_type: str = 'call') -> float:
         """
         Calculate the Black-Scholes price for an option.

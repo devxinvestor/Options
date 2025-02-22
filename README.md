@@ -22,16 +22,7 @@ The project is designed to:
 ---
 
 ## Project Structure
-ml-options-pricing/
-├── data_loader.py # Handles data retrieval (stock prices, options chain)
-├── volatility_model.py # Implements GARCH and volatility surface interpolation
-├── pricing_model.py # Trains XGBoost model and predicts option prices
-├── signal_generator.py # Generates trading signals based on predicted prices
-├── utils.py # Helper functions (file I/O, visualization, etc.)
-├── main.py # Entry point for the application
-├── README.md # Project documentation
-├── requirements.txt # Python dependencies
-└── .env # Environment variables (API keys, etc.)
+ml-options-pricing/ ├── data_loader.py # Handles data retrieval (stock prices, options chain) ├── volatility_model.py # Implements GARCH and volatility surface interpolation ├── pricing_model.py # Trains XGBoost model and predicts option prices ├── signal_generator.py # Generates trading signals based on predicted prices ├── utils.py # Helper functions (file I/O, visualization, etc.) ├── main.py # Entry point for the application ├── README.md # Project documentation ├── requirements.txt # Python dependencies └── .env # Environment variables (API keys, etc.)
 
 ---
 
@@ -100,6 +91,3 @@ In The Money: False
 - `plot_volatility_surface(vol_data: pd.DataFrame) -> None`: Plots the volatility surface.
 
 ---
-
-## License
-This project is licensed under the MIT License. See the `LICENSE` file for details.

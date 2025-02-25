@@ -13,9 +13,7 @@ def options_chain(ticker, contractType="ALL", strategy="SINGLE", range="OTM", op
     load_dotenv()
 
     logging.basicConfig(level=logging.INFO)
-
     client = schwabdev.Client(os.getenv("app_key"), os.getenv("app_secret"), os.getenv("callback_url"))
-
     options_chain = client.options_chain(symbol=ticker, contractType=contractType, includeUnderlyingQuote=True, strategy=strategy, range=range, optionType=optionType, entitlement=entitlement).json()
     sleep(3)
 
@@ -46,7 +44,7 @@ def options_chain(ticker, contractType="ALL", strategy="SINGLE", range="OTM", op
                     "openInterest": option["openInterest"],
                     "timeValue": option["timeValue"],
                     "theoreticalOptionValue": option["theoreticalOptionValue"],
-                    "theoreticalVolatility": option["theoreticalVolatility"],
+                    "ImpliedVolatility": option["theoreticalVolatility"],
                     "daysToExpiration": option["daysToExpiration"],
                     "inTheMoney": option["inTheMoney"],
                 })  

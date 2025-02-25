@@ -28,10 +28,12 @@ class SignalGenerator:
         """
         signals = []
         for _, option in predicted_chain.iterrows():
-            predicted_price = option['theoreticalOptionValue']
-            market_price = option['mark']
+            # Ensure all values are scalar
+            predicted_price = float(option['theoreticalOptionValue'])
+            market_price = float(option['mark'])
             price_difference = abs(predicted_price - market_price) / market_price
             
+            # Generate signal based on price difference
             if price_difference > self.threshold:
                 if predicted_price > market_price:
                     signal = "Buy"  # Option is undervalued
@@ -40,20 +42,21 @@ class SignalGenerator:
             else:
                 signal = "Hold"  # Option is fairly priced
             
+            # Append signal data
             signals.append({
-                "strikePrice": option['strikePrice'],
-                "expirationDate": option['expirationDate'],
-                "putCall": option['putCall'],
+                "strikePrice": float(option['strikePrice']),
+                "expirationDate": str(option['expirationDate']),  # Ensure it's a string
+                "putCall": str(option['putCall']),  # Ensure it's a string
                 "marketPrice": market_price,
                 "predictedPrice": predicted_price,
                 "priceDifference": price_difference,
                 "signal": signal,
-                "delta": option['delta'],
-                "gamma": option['gamma'],
-                "theta": option['theta'],
-                "vega": option['vega'],
-                "rho": option['rho'],
-                "inTheMoney": option['inTheMoney']
+                "delta": float(option['delta']),
+                "gamma": float(option['gamma']),
+                "theta": float(option['theta']),
+                "vega": float(option['vega']),
+                "rho": float(option['rho']),
+                "inTheMoney": bool(option['inTheMoney'])  # Ensure it's a boolean
             })
         
         return pd.DataFrame(signals)

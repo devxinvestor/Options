@@ -5,12 +5,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from scipy.stats import norm
 from math import log, sqrt, exp
-from volatility_model import VolatilityModel
 
 class PricingModel:
     def __init__(self):
         self.model = None
-        self.volatility_model = VolatilityModel()  # Initialize VolatilityModel
 
     def black_scholes_price(self, S: float, K: float, T: float, r: float, sigma: float, option_type: str = 'call') -> float:
         """
@@ -23,7 +21,7 @@ class PricingModel:
         else:
             return K * exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
 
-    def train_xgboost_model(self, options_chain: pd.DataFrame, interest_rate: float) -> XGBRegressor:
+    def train_xgboost_model(self, options_chain: pd.DataFrame) -> XGBRegressor:
         """
         Train an XGBoost model using features derived from the options chain.
         """
@@ -52,9 +50,6 @@ class PricingModel:
         if self.model is None:
             raise ValueError("Model has not been trained yet. Please train the model first.")
         
-        # Interpolate the volatility surface
-        options_chain = self.volatility_model.interpolate_vol_surface(options_chain)
-        
         # Prepare the options chain data
         predicted_options = []
         for _, option in options_chain.iterrows():
@@ -63,15 +58,7 @@ class PricingModel:
             K = option['strikePrice']
             T = option['daysToExpiration'] / 365  # Convert days to years
             r = interest_rate / 100  # Convert percentage to decimal
-            
-            # Predict implied volatility using the trained model
-            features = pd.DataFrame({
-                'Moneyness': [S / K],
-                'TimeToExpiration': [T],
-                'RiskFreeRate': [r],
-                'HistoricalVolatility': [historical_volatility]
-            })
-            predicted_iv = self.model.predict(features)[0]
+            predicted_iv = option['ImpliedVolatility']  # Use precomputed implied volatility
             
             # Calculate theoretical option value and Greeks
             theoretical_price = self.black_scholes_price(S, K, T, r, predicted_iv, option['putCall'].lower())
@@ -82,7 +69,7 @@ class PricingModel:
                 "bid": option['bid'],
                 "ask": option['ask'],
                 "mark": theoretical_price,  # Use predicted price as mark
-                "volatility": predicted_iv,  # Use predicted implied volatility
+                "volatility": predicted_iv,  # Use precomputed implied volatility
                 "delta": self.calculate_greeks(S, K, T, r, predicted_iv, 'delta', option['putCall'].lower()),
                 "gamma": self.calculate_greeks(S, K, T, r, predicted_iv, 'gamma', option['putCall'].lower()),
                 "theta": self.calculate_greeks(S, K, T, r, predicted_iv, 'theta', option['putCall'].lower()),

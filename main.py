@@ -13,19 +13,29 @@ def main():
     options, interest_rate, implied_volatility = options_chain(ticker)
     stock_data = yf.download(ticker, period="5y")
 
-    # Calculate historical volatility using VolatilityModel
-    volatility_model = VolatilityModel()
-    stock_data['LogReturn'] = volatility_model.calculate_log_returns(stock_data['Adj Close'])
-    historical_volatility = volatility_model.calculate_garch_volatility(stock_data['Adj Close'])
+    # Calculate log returns for GARCH model
+    stock_data['LogReturn'] = np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
+    stock_data.dropna(inplace=True)
 
-    # Prepare features and labels for training
-    options['Moneyness'] = stock_data['Adj Close'].iloc[-1] / options['strikePrice']
-    options['TimeToExpiration'] = options['daysToExpiration'] / 365
-    options['RiskFreeRate'] = interest_rate / 100
-    options['HistoricalVolatility'] = historical_volatility.iloc[-1]
+    # Initialize VolatilityModel
+    underlying_price = stock_data['Adj Close'].iloc[-1]
+    volatility_model = VolatilityModel(options, underlying_price, interest_rate / 100)
+
+    # Fit GARCH model to historical returns
+    volatility_model.fit_garch(stock_data['LogReturn'])
+
+    # Calculate implied volatilities for the options chain
+    volatility_model.calculate_implied_volatilities()
 
     # Interpolate the volatility surface
-    options = volatility_model.interpolate_vol_surface(options)
+    volatility_model.interpolate_volatility_surface()
+
+    # Add implied volatility and other features to the options chain
+    options = volatility_model.get_implied_volatilities()
+    options['Moneyness'] = underlying_price / options['strikePrice']
+    options['TimeToExpiration'] = options['daysToExpiration'] / 365
+    options['RiskFreeRate'] = interest_rate / 100
+    options['HistoricalVolatility'] = volatility_model.garch_model_fit.conditional_volatility[-1]
 
     # Train the XGBoost model
     pricing_model = PricingModel()
@@ -33,10 +43,10 @@ def main():
 
     # Predict the option chain
     predicted_chain = pricing_model.predict_option_chain(
-        stock_price=stock_data['Adj Close'].iloc[-1],
+        stock_price=underlying_price,
         options_chain=options,
         interest_rate=interest_rate,
-        historical_volatility=historical_volatility.iloc[-1]
+        historical_volatility=volatility_model.garch_model_fit.conditional_volatility[-1]
     )
 
     # Generate trading signals

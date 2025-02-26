@@ -22,17 +22,21 @@ class SignalGenerator:
     def generate_trading_signals(self, predicted_chain: pd.DataFrame) -> pd.DataFrame:
         """
         Generate trading signals by comparing predicted prices to market prices.
-        
+
         :param predicted_chain: DataFrame containing predicted option prices and market prices.
         :return: DataFrame with trading signals.
         """
         signals = []
         for _, option in predicted_chain.iterrows():
-            # Ensure all values are scalar
             predicted_price = float(option['theoreticalOptionValue'])
             market_price = float(option['mark'])
-            price_difference = abs(predicted_price - market_price) / market_price
-            
+
+            # Handle zero market price case
+            if market_price == 0:
+                price_difference = float('inf')  # Assign a high value to flag this case
+            else:
+                price_difference = abs(predicted_price - market_price) / market_price
+
             # Generate signal based on price difference
             if price_difference > self.threshold:
                 if predicted_price > market_price:
@@ -41,12 +45,12 @@ class SignalGenerator:
                     signal = "Sell"  # Option is overvalued
             else:
                 signal = "Hold"  # Option is fairly priced
-            
+
             # Append signal data
             signals.append({
                 "strikePrice": float(option['strikePrice']),
-                "expirationDate": str(option['expirationDate']),  # Ensure it's a string
-                "putCall": str(option['putCall']),  # Ensure it's a string
+                "expirationDate": str(option['expirationDate']),
+                "putCall": str(option['putCall']),
                 "marketPrice": market_price,
                 "predictedPrice": predicted_price,
                 "priceDifference": price_difference,
@@ -58,7 +62,7 @@ class SignalGenerator:
                 "rho": float(option['rho']),
                 "inTheMoney": bool(option['inTheMoney'])  # Ensure it's a boolean
             })
-        
+
         return pd.DataFrame(signals)
 
     def format_output(self, signals: pd.DataFrame) -> str:
